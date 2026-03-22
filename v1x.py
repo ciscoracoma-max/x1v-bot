@@ -1,8 +1,8 @@
+import discord
 import os
 import re
 from datetime import datetime, timezone
 
-import discord
 from discord.ext import commands
 from discord import app_commands
 
@@ -56,21 +56,15 @@ def get_field_value(embed: discord.Embed, field_name: str, default: str = "N/A")
     return default
 
 async def get_next_vouch_number(vouches_channel: discord.TextChannel) -> int:
-    """
-    Looks at the latest bot embed in the vouches channel and increments the last Vouch N°.
-    If nothing is found, starts at 1.
-    """
     async for msg in vouches_channel.history(limit=25):
         if not msg.embeds:
             continue
-
         embed = msg.embeds[0]
         for field in embed.fields:
             if field.name.strip().lower() in {"vouch n°", "vouch no", "vouch number"}:
                 match = re.search(r"\d+", field.value)
                 if match:
                     return int(match.group()) + 1
-
     return 1
 
 def make_review_embed(
@@ -210,7 +204,6 @@ async def vouch(
         ephemeral=True,
     )
 
-# Guild-only registration for faster slash command visibility
 vouch = app_commands.guilds(discord.Object(id=GUILD_ID))(vouch)
 
 # =========================
@@ -218,15 +211,12 @@ vouch = app_commands.guilds(discord.Object(id=GUILD_ID))(vouch)
 # =========================
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    # Ignore bot reactions
     if payload.user_id == bot.user.id:
         return
 
-    # Only your review channel
     if payload.channel_id != CONFIG_CHANNEL_ID:
         return
 
-    # Only your admin account
     if payload.user_id != ADMIN_ID:
         return
 
@@ -252,11 +242,9 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
     review_embed = message.embeds[0]
 
-    # Prevent double handling
     if review_already_handled(review_embed):
         return
 
-    # Pull original info
     stars_display = review_embed.description or "⭐"
     vouch_text = get_field_value(review_embed, "Vouch", "No review text provided.")
     service = get_field_value(review_embed, "Service", "Not specified")
@@ -321,7 +309,4 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     except Exception:
         pass
 
-# =========================
-# RUN
-# =========================
 bot.run(TOKEN)
