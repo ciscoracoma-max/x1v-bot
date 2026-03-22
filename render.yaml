@@ -1,6 +1,6 @@
 services:
   - type: worker
-    name: v1xclusive-vouch-bot
+    name: V1x Vouch
     runtime: python
     buildCommand: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
     startCommand: python v1x.py
